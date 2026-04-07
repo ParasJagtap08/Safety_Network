@@ -1,5 +1,6 @@
 import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet } from 'react-native';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function ContactsScreen() {
 
@@ -7,11 +8,38 @@ export default function ContactsScreen() {
   const [phone, setPhone] = useState('');
   const [contacts, setContacts] = useState([]);
 
+  // 🔄 Load saved contacts when screen opens
+  useEffect(() => {
+    loadContacts();
+  }, []);
+
+  const loadContacts = async () => {
+    try {
+      const data = await AsyncStorage.getItem('contacts');
+      if (data) {
+        setContacts(JSON.parse(data));
+      }
+    } catch (error) {
+      console.log("Error loading contacts", error);
+    }
+  };
+
+  const saveContacts = async (newContacts) => {
+    try {
+      await AsyncStorage.setItem('contacts', JSON.stringify(newContacts));
+    } catch (error) {
+      console.log("Error saving contacts", error);
+    }
+  };
+
   const addContact = () => {
     if (!name || !phone) return;
 
     const newContact = { id: Date.now().toString(), name, phone };
-    setContacts([...contacts, newContact]);
+    const updatedContacts = [...contacts, newContact];
+
+    setContacts(updatedContacts);
+    saveContacts(updatedContacts);
 
     setName('');
     setPhone('');

@@ -3,13 +3,40 @@ import { Text, View, ActivityIndicator, TouchableOpacity, StyleSheet, Alert } fr
 import { AuthContext, AuthProvider } from '@/hooks/authContext';
 import { useRouter } from 'expo-router';
 import { SOSChoicesProvider } from '@/hooks/sosServicesContext';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 function Home() {
   const { token, loading } = useContext(AuthContext);
   const router = useRouter();
 
-  const triggerSOS = () => {
-    Alert.alert("SOS Triggered!");
+  // 🔥 UPDATED SOS FUNCTION
+  const triggerSOS = async () => {
+    try {
+      const data = await AsyncStorage.getItem('contacts');
+
+      if (!data) {
+        Alert.alert("No emergency contacts found!");
+        return;
+      }
+
+      const contacts = JSON.parse(data);
+
+      if (contacts.length === 0) {
+        Alert.alert("No contacts added!");
+        return;
+      }
+
+      let message = "🚨 SOS Alert sent to:\n\n";
+
+      contacts.forEach((c: any) => {
+        message += `${c.name} (${c.phone})\n`;
+      });
+
+      Alert.alert("SOS Triggered", message);
+
+    } catch (error) {
+      console.log("Error triggering SOS", error);
+    }
   };
 
   useEffect(() => {
@@ -96,5 +123,3 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
 });
-
-// SOS feature implemented
