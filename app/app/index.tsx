@@ -4,12 +4,13 @@ import { AuthContext, AuthProvider } from '@/hooks/authContext';
 import { useRouter } from 'expo-router';
 import { SOSChoicesProvider } from '@/hooks/sosServicesContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Linking from 'expo-linking';
 
 function Home() {
   const { token, loading } = useContext(AuthContext);
   const router = useRouter();
 
-  // 🔥 UPDATED SOS FUNCTION
+  // 🔥 FINAL SOS FUNCTION (WITH AUTO CALL)
   const triggerSOS = async () => {
     try {
       const data = await AsyncStorage.getItem('contacts');
@@ -26,13 +27,16 @@ function Home() {
         return;
       }
 
-      let message = "🚨 SOS Alert sent to:\n\n";
+      const firstContact = contacts[0];
 
-      contacts.forEach((c: any) => {
-        message += `${c.name} (${c.phone})\n`;
-      });
+      // Show alert
+      Alert.alert(
+        "🚨 SOS Triggered",
+        `Calling ${firstContact.name} (${firstContact.phone})`
+      );
 
-      Alert.alert("SOS Triggered", message);
+      // 📞 AUTO CALL
+      Linking.openURL(`tel:${firstContact.phone}`);
 
     } catch (error) {
       console.log("Error triggering SOS", error);
