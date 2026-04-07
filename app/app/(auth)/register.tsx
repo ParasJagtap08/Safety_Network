@@ -1,4 +1,6 @@
-import React, { useContext, useState } from 'react';
+import { useEffect } from 'react';
+import { startShakeDetection } from '../../services/motionService';
+import React, { useContext, useState, useEffect } from 'react';
 import {
   View,
   TextInput,
@@ -11,13 +13,15 @@ import {
 } from 'react-native';
 import axios from 'axios';
 import { Redirect } from 'expo-router';
-import { Picker } from '@react-native-picker/picker'; // Correct import
+import { Picker } from '@react-native-picker/picker';
 import ApiConstants from '@/constants/apiConstants';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AuthContext } from '@/hooks/authContext';
+import { startShakeDetection } from '../../services/motionService'; // ✅ ADD THIS
 
 const RegistrationScreen = () => {
-  const { login } = useContext(AuthContext)
+  const { login } = useContext(AuthContext);
+
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
@@ -26,10 +30,18 @@ const RegistrationScreen = () => {
     gender: 'Male',
     address: '',
   });
+
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
   const [isRegistered, setIsRegistered] = useState(false);
+
+  // ✅ ADD THIS BLOCK (SHAKE DETECTION)
+  useEffect(() => {
+    startShakeDetection(() => {
+      alert("🚨 SOS Triggered!");
+    });
+  }, []);
 
   const handleInputChange = (key: string, value: string) => {
     setFormData({ ...formData, [key]: value });
@@ -61,18 +73,23 @@ const RegistrationScreen = () => {
       return;
     }
 
-
     try {
       formData.gender = formData.gender.toUpperCase();
 
-      const response = alert("User Registered Successfully 🚀");
-      const { token } = response.data;
+      alert("User Registered Successfully 🚀");
+
+      // Example placeholder (replace with real API)
+      // const response = await axios.post(ApiConstants.REGISTER, formData);
+      // const { token } = response.data;
+
+      const token = "dummy-token"; // temporary
       login(token);
       await AsyncStorage.setItem('token', token);
+
       setSuccess('Registration successful!');
       setIsRegistered(true);
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Registration failed' + err);
+      setError(err.response?.data?.message || 'Registration failed');
     } finally {
       setLoading(false);
     }
@@ -88,12 +105,14 @@ const RegistrationScreen = () => {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <Text style={styles.title}>Register</Text>
+
       <TextInput
         style={styles.input}
         placeholder="Name"
         value={formData.name}
         onChangeText={(value) => handleInputChange('name', value)}
       />
+
       <TextInput
         style={styles.input}
         placeholder="Phone (1234567890)"
@@ -101,6 +120,7 @@ const RegistrationScreen = () => {
         onChangeText={(value) => handleInputChange('phone', value)}
         keyboardType="phone-pad"
       />
+
       <TextInput
         style={styles.input}
         placeholder="Email (abc@gmail.com)"
@@ -108,6 +128,7 @@ const RegistrationScreen = () => {
         onChangeText={(value) => handleInputChange('email', value)}
         keyboardType="email-address"
       />
+
       <TextInput
         style={styles.input}
         placeholder="Password"
@@ -115,6 +136,7 @@ const RegistrationScreen = () => {
         onChangeText={(value) => handleInputChange('password', value)}
         secureTextEntry
       />
+
       <Picker
         selectedValue={formData.gender}
         style={styles.input}
@@ -124,17 +146,20 @@ const RegistrationScreen = () => {
         <Picker.Item label="Female" value="female" />
         <Picker.Item label="Other" value="other" />
       </Picker>
+
       <TextInput
         style={styles.input}
         placeholder="Address"
         value={formData.address}
         onChangeText={(value) => handleInputChange('address', value)}
       />
+
       {loading ? (
         <ActivityIndicator size="large" color="#6200ee" />
       ) : (
         <Button title="Register" onPress={handleRegister} />
       )}
+
       {error ? <Text style={styles.error}>{error}</Text> : null}
       {success ? <Text style={styles.success}>{success}</Text> : null}
     </KeyboardAvoidingView>
@@ -174,4 +199,3 @@ const styles = StyleSheet.create({
 });
 
 export default RegistrationScreen;
-
