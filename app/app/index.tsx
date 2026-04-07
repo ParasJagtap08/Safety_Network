@@ -5,12 +5,13 @@ import { useRouter } from 'expo-router';
 import { SOSChoicesProvider } from '@/hooks/sosServicesContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Linking from 'expo-linking';
+import { Accelerometer } from 'expo-sensors';
 
 function Home() {
   const { token, loading } = useContext(AuthContext);
   const router = useRouter();
 
-  // 🔥 FINAL SOS FUNCTION (WITH AUTO CALL)
+  // 🚨 SOS FUNCTION (AUTO CALL)
   const triggerSOS = async () => {
     try {
       const data = await AsyncStorage.getItem('contacts');
@@ -29,20 +30,50 @@ function Home() {
 
       const firstContact = contacts[0];
 
-      // Show alert
       Alert.alert(
         "🚨 SOS Triggered",
         `Calling ${firstContact.name} (${firstContact.phone})`
       );
 
       // 📞 AUTO CALL
-      Linking.openURL(`tel:${firstContact.phone}`);
+      const url = `tel:${firstContact.phone}`;
+      const supported = await Linking.canOpenURL(url);
+
+      if (supported) {
+        await Linking.openURL(url);
+      } else {
+        Alert.alert("Calling not supported on this device");
+      }
 
     } catch (error) {
       console.log("Error triggering SOS", error);
     }
   };
 
+  // 📳 SHAKE DETECTION
+  useEffect(() => {
+    let lastUpdate = 0;
+
+    const subscription = Accelerometer.addListener(({ x, y, z }) => {
+      const total = Math.abs(x + y + z);
+      const now = Date.now();
+
+      if (total > 1.8) { // sensitivity
+        if (now - lastUpdate > 2000) { // cooldown
+          lastUpdate = now;
+          triggerSOS();
+        }
+      }
+    });
+
+    Accelerometer.setUpdateInterval(300);
+
+    return () => {
+      subscription && subscription.remove();
+    };
+  }, []);
+
+  // 🔐 AUTH CHECK
   useEffect(() => {
     if (loading) return;
     if (!token) {
@@ -50,7 +81,7 @@ function Home() {
     }
   }, [loading, token, router]);
 
-  // 🔄 Loading screen
+  // 🔄 LOADING
   if (loading) {
     return (
       <View style={styles.center}>
@@ -60,7 +91,7 @@ function Home() {
     );
   }
 
-  // 🔴 Not logged in
+  // 🔴 NOT LOGGED IN
   if (!token) return null;
 
   // ✅ MAIN UI
@@ -73,7 +104,7 @@ function Home() {
         <Text style={styles.buttonText}>SOS</Text>
       </TouchableOpacity>
 
-      {/* ➕ NAVIGATE TO CONTACTS */}
+      {/* ➕ CONTACTS */}
       <TouchableOpacity onPress={() => router.push('/contacts')}>
         <Text style={styles.link}>Go to Emergency Contacts</Text>
       </TouchableOpacity>
@@ -127,6 +158,3 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
 });
-
-// auto call feature added
-// auto call feature working
