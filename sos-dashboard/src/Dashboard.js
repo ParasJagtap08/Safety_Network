@@ -1,10 +1,19 @@
+import { useEffect, useState } from "react";
+import { collection, onSnapshot } from "firebase/firestore";
+import { db } from "./firebase";
 import Map from "./Map";
-import { useState } from "react";
 
 function Dashboard() {
-  const [alerts] = useState([
-    { name: "Test User", lat: 18.5204, lng: 73.8567 }
-  ]);
+  const [alerts, setAlerts] = useState([]);
+
+  useEffect(() => {
+    const unsub = onSnapshot(collection(db, "sos_alerts"), (snapshot) => {
+      const data = snapshot.docs.map(doc => doc.data());
+      setAlerts(data);
+    });
+
+    return () => unsub();
+  }, []);
 
   return (
     <div>
@@ -17,9 +26,7 @@ function Dashboard() {
         </div>
       ))}
 
-      {/* ✅ MOVE IT INSIDE */}
       <Map alerts={alerts} />
-
     </div>
   );
 }
