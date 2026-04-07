@@ -6,12 +6,13 @@ import { SOSChoicesProvider } from '@/hooks/sosServicesContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Linking from 'expo-linking';
 import { Accelerometer } from 'expo-sensors';
+import * as Location from 'expo-location'; // ✅ ADDED
 
 function Home() {
   const { token, loading } = useContext(AuthContext);
   const router = useRouter();
 
-  // 🚨 SOS FUNCTION (AUTO CALL)
+  // 🚨 FINAL SOS FUNCTION (AUTO CALL + LOCATION)
   const triggerSOS = async () => {
     try {
       const data = await AsyncStorage.getItem('contacts');
@@ -30,12 +31,27 @@ function Home() {
 
       const firstContact = contacts[0];
 
+      // 📍 LOCATION PERMISSION
+      const { status } = await Location.requestForegroundPermissionsAsync();
+
+      if (status !== 'granted') {
+        Alert.alert("Permission denied for location");
+        return;
+      }
+
+      // 📍 GET LOCATION
+      const location = await Location.getCurrentPositionAsync({});
+      const { latitude, longitude } = location.coords;
+
+      const locationLink = `https://maps.google.com/?q=${latitude},${longitude}`;
+
+      // 🚨 ALERT WITH LOCATION
       Alert.alert(
         "🚨 SOS Triggered",
-        `Calling ${firstContact.name} (${firstContact.phone})`
+        `Calling ${firstContact.name} (${firstContact.phone})\n\nLocation:\n${locationLink}`
       );
 
-      // 📞 SAFE CALL
+      // 📞 CALL
       const url = `tel:${firstContact.phone}`;
       const supported = await Linking.canOpenURL(url);
 
@@ -159,4 +175,4 @@ const styles = StyleSheet.create({
   },
 });
 
-// ✅ FINAL VERSION: Auto Call + Shake Detection
+// ✅ FINAL VERSION: Auto Call + Shake + Live Location 🚀
