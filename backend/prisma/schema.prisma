@@ -1,0 +1,62 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id        Int        @id @default(autoincrement())
+  name      String
+  phone     String
+  email     String     @unique
+  password  String
+  gender    String     // ✅ FIXED (was enum)
+  address   String?
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  location  Location[]
+  alert     Alert[]
+}
+
+model Alert {
+  id         Int        @id @default(autoincrement())
+  accessCode String     @default(uuid())
+  userId     Int
+  User       User       @relation(fields: [userId], references: [id])
+  audio      Audio[]
+  image      Image[]
+  location   Location[]
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+}
+
+model Audio {
+  id        Int      @id @default(autoincrement())
+  alertId   Int
+  alert     Alert    @relation(fields: [alertId], references: [id])
+  base64    String
+  createdAt DateTime @default(now())
+}
+
+model Image {
+  id        Int      @id @default(autoincrement())
+  alertId   Int
+  alert     Alert    @relation(fields: [alertId], references: [id])
+  base64    String
+  createdAt DateTime @default(now())
+}
+
+model Location {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  User      User     @relation(fields: [userId], references: [id])
+  isalert   Boolean  @default(false)
+  alertId   Int?
+  alert     Alert?   @relation(fields: [alertId], references: [id])
+  latitude  Float
+  longitude Float
+  createdAt DateTime @default(now())
+}
