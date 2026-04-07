@@ -127,3 +127,5 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
 });
+
+// auto call feature added
