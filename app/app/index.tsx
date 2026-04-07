@@ -19,7 +19,7 @@ function Home() {
     }
   }, [loading, token, router]);
 
-  // 🔄 SHOW LOADING
+  // 🔄 Loading screen
   if (loading) {
     return (
       <View style={styles.center}>
@@ -29,16 +29,22 @@ function Home() {
     );
   }
 
-  // 🔴 IF NOT LOGGED IN → NOTHING (REDIRECT WILL HAPPEN)
+  // 🔴 Not logged in
   if (!token) return null;
 
-  // ✅ MAIN UI (YOUR CONTRIBUTION)
+  // ✅ MAIN UI
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Safety Network</Text>
 
+      {/* 🚨 SOS BUTTON */}
       <TouchableOpacity style={styles.button} onPress={triggerSOS}>
         <Text style={styles.buttonText}>SOS</Text>
+      </TouchableOpacity>
+
+      {/* ➕ NAVIGATE TO CONTACTS */}
+      <TouchableOpacity onPress={() => router.push('/contacts')}>
+        <Text style={styles.link}>Go to Emergency Contacts</Text>
       </TouchableOpacity>
     </View>
   );
@@ -83,6 +89,11 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 28,
     fontWeight: 'bold',
+  },
+  link: {
+    marginTop: 20,
+    color: 'blue',
+    fontSize: 16,
   },
 });
 
